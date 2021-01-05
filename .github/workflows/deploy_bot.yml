@@ -1,0 +1,37 @@
+name: Deploy Bot
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout newest cancer
+        uses: actions/checkout@v2
+
+      - name: Deploy the Service
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          source: "*"
+          target: "software/chaddi-discord/stage"
+          overwrite: true
+
+      - name: Restart the Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd software/chaddi-discord/stage/scripts
+            ./deploy.sh
