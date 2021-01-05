@@ -1,0 +1,18 @@
+{
+  "name": "chaddi-discord",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:arkits/chaddi-discord.git",
+  "author": "Archit Khode <arkits@outlook.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "NODE_ENV=production node src/index.js | bunyan"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.3.3",
+    "bunyan": "^1.8.14",
+    "config": "^3.3.3",
+    "discord.js": "^12.5.1",
+    "ffmpeg-static": "^4.2.7"
+  }
+}

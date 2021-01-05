@@ -1,0 +1,7 @@
+{
+    "service_name": "chaddi-discord",
+    "discord": {
+        "token": ""
+    },
+    "sounds_dir": "resources/sounds"
+}
