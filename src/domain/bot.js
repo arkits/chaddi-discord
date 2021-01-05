@@ -14,8 +14,8 @@ discordClient.on("ready", () => {
 let voiceConnections = {};
 
 discordClient.on("message", async (message) => {
+  // Extract the query from the message contents
   let query = message.content.split(" ");
-  logger.info("query=%s", query);
 
   logger.info("message: username=%s query=%s", message.author.username, query);
 
@@ -29,27 +29,26 @@ discordClient.on("message", async (message) => {
     return;
   }
 
+  let voiceConnection = null;
+
   switch (query[0]) {
     case "$join":
-      if (message.member.voice.channel) {
-        logger.info("join: voice channel=%s", message.member.voice.channel.id);
-
-        let voiceConnection = await message.member.voice.channel.join();
-        voiceConnections[message.member.voice.channel.id] = voiceConnection;
-      } else {
+      voiceConnection = await getVoiceConnection(message);
+      if (voiceConnection == null) {
         message.reply("Sir aap phele aapna voice channel join kare");
+        break;
       }
       break;
 
     case "$leave":
-      if (voiceConnections.hasOwnProperty(message.member.voice.channel.id)) {
-        let voiceConnection = voiceConnections[message.member.voice.channel.id];
-
-        logger.info("leave: channel=%s", message.member.voice.channel.id);
-        voiceConnection.disconnect();
-      } else {
+      voiceConnection = await getVoiceConnection(message);
+      if (voiceConnection == null) {
         message.reply("Sir aap phele aapna voice channel join kare");
+        break;
       }
+
+      logger.info("leave: channel=%s", message.member.voice.channel.id);
+      voiceConnection.disconnect();
       break;
 
     case "$p":
@@ -57,42 +56,28 @@ discordClient.on("message", async (message) => {
        * Play the specified file
        */
 
-      if (voiceConnections.hasOwnProperty(message.member.voice.channel.id)) {
-        let voiceConnection = voiceConnections[message.member.voice.channel.id];
-
-        let fileName = query[1];
-
-        logger.info("p: Playing fileName=%s", fileName);
-        try {
-          voiceConnection.play(SOUNDS_DIR + "/" + fileName + ".mp3");
-          message.react("👌");
-        } catch (error) {
-          logger.error(
-            "Caught error when playing file! fileName=%s error=%s",
-            fileName,
-            error
-          );
-          message.react("😡");
-        }
-      } else {
+      voiceConnection = await getVoiceConnection(message);
+      if (voiceConnection == null) {
         message.reply("Sir aap phele aapna voice channel join kare");
+        break;
       }
 
-      break;
+      let fileName = query[1];
 
-    case "$rkb":
-      /**
-       * Play a random file from the sounds_dir
-       */
-
-      if (voiceConnections.hasOwnProperty(message.member.voice.channel.id)) {
-        let voiceConnection = voiceConnections[message.member.voice.channel.id];
-
-        logger.info("rkb: Playing random sound");
-        // voiceConnection.play("");
-      } else {
-        message.reply("Sir aap phele aapna voice channel join kare");
+      logger.info("p: Playing fileName=%s", fileName);
+      try {
+        // TODO: Check if the file acutally exists
+        voiceConnection.play(SOUNDS_DIR + "/" + fileName + ".mp3");
+        message.react("👌");
+      } catch (error) {
+        logger.error(
+          "Caught error when playing file! fileName=%s error=%s",
+          fileName,
+          error
+        );
+        message.react("😡");
       }
+
       break;
 
     default:
@@ -103,6 +88,27 @@ discordClient.on("message", async (message) => {
 function start() {
   logger.info("Logging in...");
   discordClient.login(config.get("discord.token"));
+}
+
+async function getVoiceConnection(message) {
+  if (voiceConnections.hasOwnProperty(message.member.voice.channel.id)) {
+    // Already connected and have a persistent voiceConnection
+    return voiceConnections[message.member.voice.channel.id];
+  } else {
+    if (message.member.voice.channel) {
+      logger.info(
+        "getVoiceConnection: joining voice channel=%s",
+        message.member.voice.channel.id
+      );
+
+      let voiceConnection = await message.member.voice.channel.join();
+      voiceConnections[message.member.voice.channel.id] = voiceConnection;
+
+      return voiceConnections[message.member.voice.channel.id];
+    } else {
+      return null;
+    }
+  }
 }
 
 module.exports = {
