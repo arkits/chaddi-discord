@@ -104,3 +104,5 @@ dist
 
 production.json
 .DS_Store
+
+resources/sounds/*
