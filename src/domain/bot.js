@@ -51,6 +51,11 @@ discordClient.on("message", async (message) => {
 
       logger.info("leave: channel=%s", message.member.voice.channel.id);
       voiceConnection.disconnect();
+
+      message.react("👋");
+      message.reply("BYEEEEEEEEEEEEEEEE");
+
+      delete voiceConnections[message.member.voice.channel.id];
       break;
 
     case "$p":
@@ -101,7 +106,7 @@ discordClient.on("message", async (message) => {
         );
 
         // React to original message
-        message.react("👌");
+        message.react("🛑");
       }
 
       break;
@@ -175,7 +180,13 @@ async function playSoundFile(soundFilePath, voiceConnection, message) {
     return;
   }
 
-  let dispatcher = voiceConnection.play(soundFilePath);
+  let dispatcher = null;
+
+  try {
+    dispatcher = voiceConnection.play(soundFilePath);
+  } catch (error) {
+    logger.error("Caught Error playSoundFile! %s", error);
+  }
 
   // React to original message
   message.react("👌");
